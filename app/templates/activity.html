@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My activity — Coursewise</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a class="brand" href="{{ url_for('main.home') }}">Coursewise</a>
+
+            <nav class="site-nav">
+                <span class="user-greeting">Hi, {{ current_user.username }}</span>
+                <a href="{{ url_for('main.home') }}">Find courses</a>
+                <a href="{{ url_for('auth.logout') }}">Log out</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <h1 class="page-title">My activity</h1>
+        <p class="page-subtitle">
+            Review the courses you saved and the topics you searched for.
+        </p>
+
+        <div class="activity-layout">
+            <section class="activity-card">
+                <h2>Saved courses</h2>
+
+                {% if saved_courses %}
+                    <ul class="activity-list">
+                        {% for item in saved_courses %}
+                            <li>
+                                <strong>{{ item.course_title }}</strong><br>
+                                Saved after searching: {{ item.search_query }}<br>
+                                <span class="activity-time">
+                                    Saved {{ item.created_at.strftime("%d %b %Y, %I:%M %p") }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>You have not saved any courses yet.</p>
+                {% endif %}
+            </section>
+
+            <section class="activity-card">
+                <h2>Search history</h2>
+
+                {% if search_history %}
+                    <ul class="activity-list">
+                        {% for search in search_history %}
+                            <li>
+                                <strong>{{ search.search_query }}</strong> —
+                                {{ search.course_count }} recommendations<br>
+                                <span class="activity-time">
+                                    {{ search.created_at.strftime("%d %b %Y, %I:%M %p") }}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>You have not searched for courses yet.</p>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>

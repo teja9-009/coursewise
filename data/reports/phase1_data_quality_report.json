@@ -1,0 +1,62 @@
+{
+  "phase": "Phase 1 - Dataset Engineering",
+  "dataset": {
+    "rows": 1500,
+    "columns": 21
+  },
+  "platform_counts": {
+    "Coursera": 750,
+    "Udemy": 750
+  },
+  "unique_course_ids": 1500,
+  "duplicate_course_ids": 0,
+  "duplicate_title_platform_rows": 96,
+  "duplicate_title_platform_level_rows": 94,
+  "canonical_course_count": 1452,
+  "missing_values": {
+    "course_id": 0,
+    "title": 0,
+    "platform": 0,
+    "category": 0,
+    "instructor": 0,
+    "learning_product": 0,
+    "level": 0,
+    "duration": 0,
+    "skills": 0,
+    "rating": 0,
+    "reviews": 0,
+    "data_source": 0,
+    "url": 0,
+    "title_norm": 0,
+    "rating_known": 0,
+    "rating_clean": 115,
+    "duplicate_title_platform": 0,
+    "duplicate_title_platform_level": 0,
+    "canonical_key": 0,
+    "canonical_course_id": 0,
+    "course_text": 0
+  },
+  "url_missing": 1500,
+  "rating": {
+    "zero_or_missing": 115,
+    "minimum": 0.0,
+    "maximum": 5.0,
+    "mean": 4.226466666666666
+  },
+  "reviews": {
+    "zero_or_missing": 115,
+    "minimum": 0,
+    "maximum": 541426
+  },
+  "learning_product_counts": {
+    "Course": 1313,
+    "Specialization": 119,
+    "Guided Project": 34,
+    "Professional Certificate": 34
+  },
+  "output_files": {
+    "clean": "/Users/saiteja/course-recommender/data/processed/courses_clean.csv",
+    "canonical": "/Users/saiteja/course-recommender/data/processed/courses_canonical.csv",
+    "features": "/Users/saiteja/course-recommender/data/processed/course_features.csv"
+  }
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in — Coursewise</title>
+</head>
+<body>
+    <h1>Log in to Coursewise</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label for="email">Email address</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">Log in</button>
+    </form>
+
+    <p>
+        New to Coursewise?
+        <a href="{{ url_for('auth.register') }}">Create an account</a>
+    </p>
+
+    <p><a href="{{ url_for('main.home') }}">Back to Coursewise</a></p>
+</body>
+</html>

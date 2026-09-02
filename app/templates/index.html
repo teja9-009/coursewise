@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coursewise</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a class="brand" href="{{ url_for('main.home') }}">Coursewise</a>
+
+            <nav class="site-nav">
+                {% if current_user.is_authenticated %}
+                    <span class="user-greeting">
+                        Hi, {{ current_user.username }}
+                    </span>
+                    <a href="{{ url_for('interactions.activity') }}">My activity</a>
+                    <a href="{{ url_for('auth.logout') }}">Log out</a>
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}">Create account</a>
+                    <a href="{{ url_for('auth.login') }}">Log in</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <section class="hero">
+            <h1>Find your next course.</h1>
+            <p>
+                Get personalised Coursera and Udemy recommendations,
+                with an AI explanation of your best match.
+            </p>
+        </section>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="flash-message">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="panel search-panel">
+            <form class="search-form" method="POST">
+                <div class="field-group">
+                    <label for="interests">What would you like to learn?</label>
+                    <input
+                        type="text"
+                        id="interests"
+                        name="interests"
+                        value="{{ interests }}"
+                        placeholder="Example: Python, data science, cloud computing"
+                        required
+                    >
+                </div>
+
+                <div class="field-group filter-field">
+                    <label for="platform">Platform</label>
+                    <select id="platform" name="platform">
+                        {% for platform in platforms %}
+                            <option
+                                value="{{ platform }}"
+                                {% if platform == selected_platform %}selected{% endif %}
+                            >
+                                {{ platform }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field-group filter-field">
+                    <label for="level">Level</label>
+                    <select id="level" name="level">
+                        {% for level in levels %}
+                            <option
+                                value="{{ level }}"
+                                {% if level == selected_level %}selected{% endif %}
+                            >
+                                {{ level }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="field-group filter-field">
+                    <label for="category">Category</label>
+                    <select id="category" name="category">
+                        {% for category in categories %}
+                            <option
+                                value="{{ category }}"
+                                {% if category == selected_category %}selected{% endif %}
+                            >
+                                {{ category }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit">Find courses</button>
+            </form>
+        </section>
+
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+
+        {% if recommendations %}
+            <section>
+                <h2 class="section-heading">Your top recommendations</h2>
+
+                {% if explanation %}
+                    <article class="explanation-card">
+                        <h3>Why the top course fits you</h3>
+                        <p>{{ explanation }}</p>
+                    </article>
+                {% endif %}
+
+                <div class="course-grid">
+                    {% for course in recommendations %}
+                        <article class="course-card">
+                            <h3>{{ loop.index }}. {{ course.title }}</h3>
+
+                            <div class="course-meta">
+                                <div class="meta-item">
+                                    <strong>Platform</strong>
+                                    {{ course.platform }}
+                                </div>
+                                <div class="meta-item">
+                                    <strong>Category</strong>
+                                    {{ course.category }}
+                                </div>
+                                <div class="meta-item">
+                                    <strong>Level</strong>
+                                    {{ course.level }}
+                                </div>
+                                <div class="meta-item">
+                                    <strong>Rating</strong>
+                                    {{ course.rating }}
+                                </div>
+                                <div class="meta-item">
+                                    <strong>Match score</strong>
+                                    {{ "%.0f"|format((course.final_score | float) * 100) }}%
+                                </div>
+                            </div>
+
+                            <p>
+                                <a
+                                    class="button-link"
+                                    href="{{ course.course_link }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Find on {{ course.platform }} ↗
+                                </a>
+                            </p>
+
+                            {% if current_user.is_authenticated %}
+                                <form
+                                    class="save-form"
+                                    action="{{ url_for('interactions.save_course') }}"
+                                    method="POST"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="course_id"
+                                        value="{{ course.course_id }}"
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="course_title"
+                                        value="{{ course.title }}"
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="search_query"
+                                        value="{{ interests }}"
+                                    >
+                                    <button class="button-secondary" type="submit">
+                                        Save course
+                                    </button>
+                                </form>
+                            {% else %}
+                                <a
+                                    class="button-link"
+                                    href="{{ url_for('auth.login') }}"
+                                >
+                                    Log in to save
+                                </a>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

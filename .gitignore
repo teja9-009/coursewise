@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+coursewise.db
+.env
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+data/models/
