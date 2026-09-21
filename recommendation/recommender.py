@@ -27,6 +27,54 @@ class CourseRecommender:
             self.engine.tfidf_matrix,
         )
 
+    @staticmethod
+    def _ensure_platform_diversity(
+        ranked: pd.DataFrame,
+        preferred_platforms: list[str],
+        top_k: int,
+    ) -> pd.DataFrame:
+        """Keep an all-platform search useful across both course providers.
+
+        Ranking remains score-based, but a combined Coursera/Udemy search should
+        not silently become a single-platform search when relevant matches from
+        both providers are available.  Reserve up to two positions per provider,
+        then fill any remaining positions with the next highest-scoring courses.
+        """
+        requested_platforms = {
+            str(platform).strip().lower() for platform in preferred_platforms
+        }
+        supported_platforms = ("coursera", "udemy")
+
+        if (
+            top_k < 2
+            or not set(supported_platforms).issubset(requested_platforms)
+        ):
+            return ranked.head(top_k).reset_index(drop=True)
+
+        platform_matches = {
+            platform: ranked[
+                ranked["platform"].fillna("").str.lower().eq(platform)
+            ]
+            for platform in supported_platforms
+        }
+
+        if not all(not matches.empty for matches in platform_matches.values()):
+            return ranked.head(top_k).reset_index(drop=True)
+
+        reserved_per_platform = min(2, top_k // len(supported_platforms))
+        reserved = pd.concat(
+            [
+                platform_matches[platform].head(reserved_per_platform)
+                for platform in supported_platforms
+            ]
+        )
+        remaining = ranked.loc[~ranked.index.isin(reserved.index)]
+        balanced = pd.concat([reserved, remaining]).sort_values(
+            by="final_score", ascending=False
+        )
+
+        return balanced.head(top_k).reset_index(drop=True)
+
     def recommend(self, profile: UserProfile, top_k: int = 10):
         query = self.profile_builder.build_query(profile)
 
@@ -101,4 +149,9 @@ class CourseRecommender:
             cross_domain_scores=cross_domain_scores,
         )
 
-        return ranked.drop_duplicates(subset="title").head(top_k)
+        ranked = ranked.drop_duplicates(subset="title")
+        return self._ensure_platform_diversity(
+            ranked=ranked,
+            preferred_platforms=profile.preferred_platforms,
+            top_k=top_k,
+        )

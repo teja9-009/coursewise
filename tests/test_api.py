@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from app import create_app, db
+from recommendation.recommender import CourseRecommender
 
 
 @pytest.fixture()
@@ -152,3 +153,27 @@ def test_recommendations_return_courses_and_create_search_history(client, monkey
 
     activity_response = client.get("/api/activity")
     assert activity_response.json["search_history"][0]["search_query"] == "python"
+
+
+def test_all_platform_recommendations_keep_coursera_and_udemy_matches():
+    ranked = pd.DataFrame(
+        [
+            {"course_id": 1, "platform": "Coursera", "final_score": 0.95},
+            {"course_id": 2, "platform": "Coursera", "final_score": 0.90},
+            {"course_id": 3, "platform": "Coursera", "final_score": 0.85},
+            {"course_id": 4, "platform": "Udemy", "final_score": 0.80},
+            {"course_id": 5, "platform": "Udemy", "final_score": 0.75},
+            {"course_id": 6, "platform": "Udemy", "final_score": 0.70},
+        ]
+    )
+
+    results = CourseRecommender._ensure_platform_diversity(
+        ranked=ranked,
+        preferred_platforms=["Coursera", "Udemy"],
+        top_k=5,
+    )
+
+    assert len(results) == 5
+    assert set(results["platform"]) == {"Coursera", "Udemy"}
+    assert (results["platform"] == "Coursera").sum() >= 2
+    assert (results["platform"] == "Udemy").sum() >= 2
