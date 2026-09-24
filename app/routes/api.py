@@ -103,7 +103,18 @@ def health():
 
 @api_bp.get("/me")
 def get_current_user():
-    return jsonify({"user": current_user_data()})
+    # This is deliberately only a capability flag. It tells the interface
+    # whether the OAuth credentials are present without exposing either value.
+    google_sign_in_available = bool(
+        os.environ.get("GOOGLE_CLIENT_ID")
+        and os.environ.get("GOOGLE_CLIENT_SECRET")
+    )
+    return jsonify(
+        {
+            "user": current_user_data(),
+            "google_sign_in_available": google_sign_in_available,
+        }
+    )
 
 
 @api_bp.post("/auth/register")

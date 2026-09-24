@@ -15,7 +15,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from user_profile import UserProfile
+try:
+    from .user_profile import UserProfile
+except ImportError:
+    from user_profile import UserProfile
 
 
 class ProfileBuilder:

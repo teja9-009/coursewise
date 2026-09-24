@@ -58,6 +58,7 @@ def test_registration_logs_the_user_in_and_returns_their_profile(client):
     me_response = client.get("/api/me")
     assert me_response.status_code == 200
     assert me_response.json["user"]["email"] == "learner@example.com"
+    assert me_response.json["google_sign_in_available"] is False
 
 
 def test_profile_update_is_saved_for_the_logged_in_user(client):

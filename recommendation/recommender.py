@@ -7,11 +7,20 @@ from pathlib import Path
 
 import pandas as pd
 
-from tfidf_engine import TFIDFEngine
-from user_profile import UserProfile
-from ranking import PersonalizedRanker
-from profile_builder import ProfileBuilder
-from cross_domain_transfer import CrossDomainPreferenceTransfer
+try:
+    # Package imports are used by automated tests and developer tooling.
+    from .tfidf_engine import TFIDFEngine
+    from .user_profile import UserProfile
+    from .ranking import PersonalizedRanker
+    from .profile_builder import ProfileBuilder
+    from .cross_domain_transfer import CrossDomainPreferenceTransfer
+except ImportError:
+    # The deployed API loads this directory directly for backwards compatibility.
+    from tfidf_engine import TFIDFEngine
+    from user_profile import UserProfile
+    from ranking import PersonalizedRanker
+    from profile_builder import ProfileBuilder
+    from cross_domain_transfer import CrossDomainPreferenceTransfer
 
 
 class CourseRecommender:

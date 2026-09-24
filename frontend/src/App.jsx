@@ -72,11 +72,15 @@ function App() {
   const [authMode, setAuthMode] = useState("login")
   const [authForm, setAuthForm] = useState({ username: "", email: "", password: "" })
   const [profileForm, setProfileForm] = useState(emptyProfile())
+  const [googleSignInAvailable, setGoogleSignInAvailable] = useState(false)
+  const [filtersChanged, setFiltersChanged] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
 
   useEffect(() => {
     apiFetch("/api/me")
       .then((data) => {
         setUser(data.user)
+        setGoogleSignInAvailable(Boolean(data.google_sign_in_available))
         if (data.user) setProfileForm(profileFromUser(data.user))
       })
       .catch(() => setUser(null))
@@ -90,6 +94,7 @@ function App() {
       apiFetch("/api/me")
         .then((data) => {
           setUser(data.user)
+          setGoogleSignInAvailable(Boolean(data.google_sign_in_available))
           setProfileForm(profileFromUser(data.user))
           setWelcomeName(data.user?.username || "there")
         })
@@ -132,11 +137,23 @@ function App() {
       })
       setRecommendations(data.recommendations)
       setExplanation(data.explanation)
+      setFiltersChanged(false)
+      setHasSearched(true)
     } catch (requestError) {
       showError(requestError.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  function updateSearchInput(setter, value) {
+    setter(value)
+    if (recommendations.length > 0 || explanation) {
+      setRecommendations([])
+      setExplanation("")
+      setFiltersChanged(true)
+    }
+    setHasSearched(false)
   }
 
   async function saveCourse(course) {
@@ -304,17 +321,19 @@ function App() {
         {view === "discover" && (
           <Discover
             interests={interests}
-            setInterests={setInterests}
+            setInterests={(value) => updateSearchInput(setInterests, value)}
             platform={platform}
-            setPlatform={setPlatform}
+            setPlatform={(value) => updateSearchInput(setPlatform, value)}
             level={level}
-            setLevel={setLevel}
+            setLevel={(value) => updateSearchInput(setLevel, value)}
             category={category}
-            setCategory={setCategory}
+            setCategory={(value) => updateSearchInput(setCategory, value)}
             loading={loading}
             onSearch={searchCourses}
             recommendations={recommendations}
             explanation={explanation}
+            filtersChanged={filtersChanged}
+            hasSearched={hasSearched}
             onSave={saveCourse}
             onTrack={trackCourse}
           />
@@ -338,8 +357,14 @@ function App() {
               <CardDescription>Save courses, track your learning, and build a personal profile.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline" onClick={() => window.location.assign("/api/auth/google")}>Continue with Google</Button>
-              <div className="my-4 flex items-center gap-3 text-xs text-slate-500 before:h-px before:flex-1 before:bg-slate-200 after:h-px after:flex-1 after:bg-slate-200">or</div>
+              {googleSignInAvailable ? (
+                <>
+                  <Button className="w-full" variant="outline" onClick={() => window.location.assign("/api/auth/google")}>Continue with Google</Button>
+                  <div className="my-4 flex items-center gap-3 text-xs text-slate-500 before:h-px before:flex-1 before:bg-slate-200 after:h-px after:flex-1 after:bg-slate-200">or</div>
+                </>
+              ) : (
+                <p className="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">Google sign-in is not available yet. Use email and password below.</p>
+              )}
               <form className="grid gap-4" onSubmit={submitAuth}>
                 {authMode === "register" && <Input placeholder="Username" value={authForm.username} onChange={(event) => setAuthForm({ ...authForm, username: event.target.value })} />}
                 <Input placeholder="Email address" type="email" value={authForm.email} onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })} />
@@ -377,9 +402,13 @@ function Discover(props) {
         </CardContent>
       </Card>
 
+      {props.filtersChanged && <Notice tone="info">Filters changed. Tap Search to refresh your recommendations.</Notice>}
+
       {props.explanation && <Card className="mb-8 border-amber-200 bg-amber-50 shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-amber-950"><Sparkles className="size-5" /> Why your top match fits</CardTitle><CardDescription className="text-amber-900">{props.explanation}</CardDescription></CardHeader></Card>}
 
       {props.recommendations.length > 0 && <section><div className="mb-5 flex items-center justify-between"><div><h2 className="text-2xl font-semibold tracking-tight">Recommended for you</h2><p className="mt-1 text-sm text-slate-500">Ranked by similarity, preference filters, and course quality.</p></div><Badge variant="outline">{props.recommendations.length} matches</Badge></div><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{props.recommendations.map((course, index) => <CourseCard key={`${course.course_id}-${index}`} course={course} onSave={props.onSave} onTrack={props.onTrack} />)}</div></section>}
+
+      {props.hasSearched && props.recommendations.length === 0 && !props.loading && <Card className="border-dashed shadow-none"><CardContent className="py-10 text-center"><h2 className="text-lg font-semibold">No exact matches found</h2><p className="mt-2 text-sm text-slate-600">Try a broader level or category, or choose all platforms to see more courses.</p></CardContent></Card>}
     </>
   )
 }
@@ -484,7 +513,11 @@ function ProfileSelect({ label, value, options, onChange }) {
 }
 
 function Notice({ tone, children }) {
-  const colors = tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
+  const colors = tone === "success"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+    : tone === "info"
+      ? "border-amber-200 bg-amber-50 text-amber-900"
+      : "border-red-200 bg-red-50 text-red-800"
   return <div className={`mb-6 rounded-xl border px-4 py-3 text-sm font-medium ${colors}`}>{children}</div>
 }
 
